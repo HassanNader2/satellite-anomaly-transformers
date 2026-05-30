@@ -1,0 +1,30 @@
+run_id: anomaly-transformer-opssat-20260516-d128-01
+model: anomaly-transformer
+dataset: opssat
+
+data:
+  T: 512
+  min_len: 16
+  val_frac: 0.20
+  seed: 42
+
+model_params:
+  win_size: 512
+  enc_in: 1
+  c_out: 1
+  d_model: 128
+  n_heads: 4
+  e_layers: 2
+  d_ff: 256
+  dropout: 0.0
+  activation: gelu
+  k: 3
+  temperature: 50
+
+training:
+  epochs: 20
+  batch_size: 32
+  lr: 0.0001
+  patience: 10
+  warmup_epochs: 3
+  seed: 42

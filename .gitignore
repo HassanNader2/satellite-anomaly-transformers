@@ -1,0 +1,22 @@
+# Virtual environment (lives at project root, not here)
+venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Model source repos (cloned, not ours) — top-level only
+/models/
+
+# Large binary outputs
+results/*.npz
+results/*.npy
+logs/
+checkpoints/
+
+# Data (too large; download separately)
+../data/
+
+# IDE
+.DS_Store
+.vscode/
+*.egg-info/

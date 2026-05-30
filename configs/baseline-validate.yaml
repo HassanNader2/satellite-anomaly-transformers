@@ -1,0 +1,38 @@
+run_id: patchtst-opssat-20260514-01
+model: patchtst
+dataset: opssat
+phase: baseline-validate
+
+data:
+  csv_path: papers/satellite-anomaly/data/segments.csv
+  T: 512
+  min_len: 16
+  val_frac: 0.20
+  seed: 42
+
+model_params:
+  # PatchTST — univariate (c_in=1), reconstruction mode
+  # Input shape: (batch, 1, T=512)
+  enc_in: 1
+  seq_len: 512
+  pred_len: 512       # reconstruction: predict full sequence
+  patch_len: 16
+  stride: 8
+  d_model: 128
+  n_heads: 4
+  e_layers: 2
+  d_ff: 256
+  dropout: 0.1
+  fc_dropout: 0.1
+  head_dropout: 0.0
+  individual: false
+  revin: true
+  affine: false
+  subtract_last: false
+  decomposition: false
+  kernel_size: 25
+  padding_patch: end
+
+training:
+  batch_size: 32
+  seed: 42
