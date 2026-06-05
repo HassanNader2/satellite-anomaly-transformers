@@ -56,21 +56,21 @@ os.makedirs(_FIGURES, exist_ok=True)
 # Wong colorblind-safe palette: blue, orange/gold, green
 MODELS = [
     {
-        "config_base": "anomaly-transformer-opssat-20260516-d64-01",
+        "config_base": "anomaly-transformer-opssat-20260602-d64-01",
         "label":       "Anomaly Transformer",
         "short":       "AT",
         "color":       "#E69F00",
         "linestyle":   "-",
     },
     {
-        "config_base": "patchtst-opssat-20260516-01",
+        "config_base": "patchtst-opssat-20260602-01",
         "label":       "PatchTST",
         "short":       "PatchTST",
         "color":       "#0072B2",
         "linestyle":   "--",
     },
     {
-        "config_base": "itransformer-opssat-20260516-01",
+        "config_base": "itransformer-opssat-20260602-01",
         "label":       "iTransformer†",
         "short":       "iTransformer†",
         "color":       "#009E73",

@@ -41,21 +41,15 @@ class LSTMAEWrapper(nn.Module):
         self.output_proj = nn.Linear(hidden_size, 1)
         self.criterion = nn.MSELoss(reduction="none")
 
-    def _reconstruct(self, x, mask=None):
+    def _reconstruct(self, x):
         """
         x: (B, T, 1) — already unsqueezed.
-        mask: (B, T) boolean — encoder processes only real (non-padded) timesteps.
         Returns reconstruction (B, T, 1).
+        Encoder reads full sequence, produces context vector.
+        Decoder receives zero input and reconstructs from context vector alone.
         """
         B, T, _ = x.shape
-        if mask is not None:
-            lengths = mask.sum(dim=1).long().cpu().clamp(min=1)
-            packed = torch.nn.utils.rnn.pack_padded_sequence(
-                x, lengths, batch_first=True, enforce_sorted=False
-            )
-            _, (h_n, c_n) = self.encoder(packed)
-        else:
-            _, (h_n, c_n) = self.encoder(x)
+        _, (h_n, c_n) = self.encoder(x)
         dec_input = torch.zeros(B, T, 1, device=x.device)
         dec_out, _ = self.decoder(dec_input, (h_n, c_n))
         return self.output_proj(dec_out)
@@ -70,19 +64,19 @@ class LSTMAEWrapper(nn.Module):
     def forward(self, x, mask=None):
         if x.dim() == 2:
             x = x.unsqueeze(-1)
-        return self._reconstruct(x, mask)
+        return self._reconstruct(x)
 
     def compute_train_loss(self, x, mask=None):
         if x.dim() == 2:
             x = x.unsqueeze(-1)
-        reconstruction = self._reconstruct(x, mask)
+        reconstruction = self._reconstruct(x)
         return self._masked_mse(reconstruction, x, mask)
 
     def compute_val_loss(self, x, mask=None):
         if x.dim() == 2:
             x = x.unsqueeze(-1)
         with torch.no_grad():
-            reconstruction = self._reconstruct(x, mask)
+            reconstruction = self._reconstruct(x)
         return self._masked_mse(reconstruction, x, mask)
 
     @torch.no_grad()
@@ -94,7 +88,7 @@ class LSTMAEWrapper(nn.Module):
         self.eval()
         if x.dim() == 2:
             x = x.unsqueeze(-1)
-        reconstruction = self._reconstruct(x, mask)
+        reconstruction = self._reconstruct(x)
         loss = self.criterion(reconstruction, x).squeeze(-1)  # (B, T)
         if mask is not None:
             m = mask.float()

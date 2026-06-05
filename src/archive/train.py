@@ -51,9 +51,6 @@ def train(wrapper, train_dataset, val_dataset, config, run_id, logger=None, chec
     val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, drop_last=False)
 
     optimizer = torch.optim.Adam(wrapper.parameters(), lr=lr)
-    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-        optimizer, T_max=epochs, eta_min=1e-6
-    )
 
     model_type = config.get("model", "unknown")
     is_at = model_type == "anomaly-transformer"
@@ -82,7 +79,6 @@ def train(wrapper, train_dataset, val_dataset, config, run_id, logger=None, chec
                     # warmup: reconstruction only, no minimax
                     loss = wrapper.compute_warmup_loss(segs, masks)
                     loss.backward()
-                    torch.nn.utils.clip_grad_norm_(wrapper.parameters(), max_norm=1.0)
                     optimizer.step()
                     train_loss_sum += loss.item()
                     del loss
@@ -90,7 +86,6 @@ def train(wrapper, train_dataset, val_dataset, config, run_id, logger=None, chec
                     loss1, loss2 = wrapper.compute_train_loss(segs, masks)
                     combined_loss = loss1 + loss2
                     combined_loss.backward()
-                    torch.nn.utils.clip_grad_norm_(wrapper.parameters(), max_norm=1.0)
                     optimizer.step()
                     train_loss_sum += combined_loss.item() / 2
                     del loss1, loss2, combined_loss
@@ -121,8 +116,6 @@ def train(wrapper, train_dataset, val_dataset, config, run_id, logger=None, chec
                 n_val += 1
 
         avg_val_loss = val_loss_sum / max(n_val, 1)
-
-        scheduler.step()
 
         logger.info(f"Epoch {epoch:03d}/{epochs} | train_loss={avg_train_loss:.6f} | val_loss={avg_val_loss:.6f}")
         for handler in logger.handlers:

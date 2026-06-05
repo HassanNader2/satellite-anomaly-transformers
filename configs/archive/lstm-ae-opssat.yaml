@@ -1,4 +1,4 @@
-run_id: lstm-ae-opssat-20260602-01
+run_id: lstm-ae-opssat-20260530-01
 model: lstm-ae
 dataset: opssat
 

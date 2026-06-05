@@ -1,4 +1,4 @@
-run_id: itransformer-opssat-20260602-01
+run_id: itransformer-opssat-20260516-01
 model: itransformer
 dataset: opssat
 
@@ -25,8 +25,8 @@ model_params:
   class_strategy: projection
 
 training:
-  epochs: 40
+  epochs: 20
   batch_size: 32
   lr: 0.0001
-  patience: 10
+  patience: 5
   seed: 42

@@ -46,7 +46,7 @@ python src/run_experiment.py lstm_ae lstm-ae-opssat --seed 42
 **Summarize across seeds:**
 
 ```bash
-python src/summarize_results.py patchtst-opssat-20260516-01
+python src/summarize_results.py patchtst-opssat-20260602-01
 ```
 
 **SHAP analysis:**
@@ -64,11 +64,13 @@ python src/analyze_per_channel.py
 ## Hardware note
 
 All reported results were produced on an Intel Mac (CPU-only, no GPU).
-Floating-point results are reproducible within approximately +-0.001 of reported
-metrics across identical seeds. Minor variation is expected due to thread ordering.
+The PyTorch random seed is set before model initialisation to ensure reproducible
+weight initialisation. Run-to-run variation for a fixed seed is small and falls
+within the seed-to-seed standard deviations reported in the paper's Table 1.
+Bit-identical reproduction is not guaranteed due to CPU thread ordering.
 
-Training times per seed: PatchTST ~20 min, iTransformer ~15 min,
-Anomaly Transformer ~150 min, LSTM-AE ~30 min.
+Training times per seed (40-epoch budget): PatchTST ~40 min, iTransformer ~15 min,
+Anomaly Transformer ~150 min, LSTM-AE ~90 min.
 
 ## License
 

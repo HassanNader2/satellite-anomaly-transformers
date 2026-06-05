@@ -1,4 +1,4 @@
-run_id: anomaly-transformer-opssat-20260602-d64-01
+run_id: anomaly-transformer-opssat-20260516-d64-01
 model: anomaly-transformer
 dataset: opssat
 

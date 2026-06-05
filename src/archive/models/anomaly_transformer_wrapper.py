@@ -79,7 +79,7 @@ class AnomalyTransformerWrapper(nn.Module):
         rec_loss_per_step = self.criterion(reconstruction, x)  # (B, T, 1)
         if mask is not None:
             m = mask.unsqueeze(-1).float()
-            rec_loss = (rec_loss_per_step * m).sum() / m.sum().clamp(min=1)
+            rec_loss = (rec_loss_per_step * m).sum() / m.sum()
         else:
             rec_loss = rec_loss_per_step.mean()
 
@@ -143,6 +143,21 @@ class AnomalyTransformerWrapper(nn.Module):
         B, T, _ = x.shape
 
         rec_loss = self.criterion(reconstruction, x).squeeze(-1)  # (B, T)
+
+        series_kl = torch.zeros(B, T, device=x.device)
+        prior_kl = torch.zeros(B, T, device=x.device)
+
+        for u in range(len(prior)):
+            prior_sum = torch.unsqueeze(torch.sum(prior[u], dim=-1), dim=-1).clamp(min=1e-8)
+            prior_norm = prior[u] / prior_sum.repeat(1, 1, 1, T)
+            # kl_loss returns (B,) per call; we need (B, T) — sum over head dim
+            s_kl = torch.sum(series[u] * (torch.log(series[u] + 1e-4) - torch.log(prior_norm + 1e-4)), dim=-1)  # (B, H, T)
+            p_kl = torch.sum(prior_norm * (torch.log(prior_norm + 1e-4) - torch.log(series[u] + 1e-4)), dim=-1)
+            series_kl = series_kl + s_kl.mean(dim=1)  # average over heads → (B, T)
+            prior_kl = prior_kl + p_kl.mean(dim=1)
+
+        series_kl = series_kl / len(prior)
+        prior_kl = prior_kl / len(prior)
 
         del series, prior
 

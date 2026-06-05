@@ -56,7 +56,7 @@ MODEL_CFGS = [
         "label":     "Anomaly Transformer",
         "config":    os.path.join(_EXPERIMENTS, "configs", "anomaly-transformer-opssat.yaml"),
         "ckpt":      os.path.join(_EXPERIMENTS, "checkpoints",
-                                  "anomaly-transformer-opssat-20260516-d64-01-seed42-best.pt"),
+                                  "anomaly-transformer-opssat-20260602-d64-01-seed42-best.pt"),
         "wrapper":   "anomaly_transformer",
     },
     {
@@ -64,7 +64,7 @@ MODEL_CFGS = [
         "label":     "PatchTST",
         "config":    os.path.join(_EXPERIMENTS, "configs", "patchtst-opssat.yaml"),
         "ckpt":      os.path.join(_EXPERIMENTS, "checkpoints",
-                                  "patchtst-opssat-20260516-01-seed42-best.pt"),
+                                  "patchtst-opssat-20260602-01-seed42-best.pt"),
         "wrapper":   "patchtst",
     },
     {
@@ -72,7 +72,7 @@ MODEL_CFGS = [
         "label":     "iTransformer",
         "config":    os.path.join(_EXPERIMENTS, "configs", "itransformer-opssat.yaml"),
         "ckpt":      os.path.join(_EXPERIMENTS, "checkpoints",
-                                  "itransformer-opssat-20260516-01-seed42-best.pt"),
+                                  "itransformer-opssat-20260602-01-seed42-best.pt"),
         "wrapper":   "itransformer",
     },
 ]

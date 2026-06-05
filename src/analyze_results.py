@@ -54,9 +54,9 @@ def _load(run_id):
 def print_opssat_table():
     models = ["anomaly-transformer", "patchtst", "itransformer"]
     summary_ids = {
-        "anomaly-transformer": "anomaly-transformer-opssat-20260516-d64-01-summary",
-        "patchtst":            "patchtst-opssat-20260516-01-summary",
-        "itransformer":        "itransformer-opssat-20260516-01-summary",
+        "anomaly-transformer": "anomaly-transformer-opssat-20260602-d64-01-summary",
+        "patchtst":            "patchtst-opssat-20260602-01-summary",
+        "itransformer":        "itransformer-opssat-20260602-01-summary",
     }
 
     print("\n" + "="*70)
@@ -98,7 +98,7 @@ def print_secondary_table():
         degenerate_f1 = 2*anom_rate/(1+anom_rate)
 
         for m in ["anomaly-transformer", "patchtst", "itransformer"]:
-            run_id = f"{m}-{dataset}-20260515-01-seed42"
+            run_id = f"{m}-{dataset}-20260605-01-seed42"
             d = _load(run_id)
             me = d["metrics"]
             is_degen = abs(me["f1_oracle"] - degenerate_f1) < 0.002
@@ -119,7 +119,7 @@ def plot_secondary_aucroc():
     for m in models:
         aucroc[m] = {}
         for ds in datasets:
-            run_id = f"{m}-{ds}-20260515-01-seed42"
+            run_id = f"{m}-{ds}-20260605-01-seed42"
             d = _load(run_id)
             aucroc[m][ds] = d["metrics"]["aucroc"]
 
@@ -180,9 +180,9 @@ def plot_cross_dataset_aucroc():
     dataset_labels = {"opssat": "OPS-SAT-AD", "smap": "SMAP", "msl": "MSL"}
 
     summary_ids = {
-        "patchtst":            "patchtst-opssat-20260516-01-summary",
-        "itransformer":        "itransformer-opssat-20260516-01-summary",
-        "anomaly-transformer": "anomaly-transformer-opssat-20260516-d64-01-summary",
+        "patchtst":            "patchtst-opssat-20260602-01-summary",
+        "itransformer":        "itransformer-opssat-20260602-01-summary",
+        "anomaly-transformer": "anomaly-transformer-opssat-20260602-d64-01-summary",
     }
 
     aucroc = {m: {} for m in models}
@@ -195,7 +195,7 @@ def plot_cross_dataset_aucroc():
         aucroc_err[m]["opssat"] = d["metrics_summary"]["aucroc"]["std"]
         # SMAP / MSL — point estimate, no std
         for ds in ("smap", "msl"):
-            run_id = f"{m}-{ds}-20260515-01-seed42"
+            run_id = f"{m}-{ds}-20260605-01-seed42"
             d2 = _load(run_id)
             aucroc[m][ds]     = d2["metrics"]["aucroc"]
             aucroc_err[m][ds] = 0.0
@@ -246,9 +246,9 @@ def plot_cross_dataset_aucroc():
 def print_latex_opssat():
     models = ["patchtst", "itransformer", "anomaly-transformer"]
     summary_ids = {
-        "anomaly-transformer": "anomaly-transformer-opssat-20260516-d64-01-summary",
-        "patchtst":            "patchtst-opssat-20260516-01-summary",
-        "itransformer":        "itransformer-opssat-20260516-01-summary",
+        "anomaly-transformer": "anomaly-transformer-opssat-20260602-d64-01-summary",
+        "patchtst":            "patchtst-opssat-20260602-01-summary",
+        "itransformer":        "itransformer-opssat-20260602-01-summary",
     }
 
     print("\n--- LaTeX OPS-SAT-AD table ---")
@@ -282,7 +282,7 @@ def print_latex_secondary():
     for ds, label in [("smap", "SMAP"), ("msl", "MSL")]:
         first = True
         for m in models:
-            run_id = f"{m}-{ds}-20260515-01-seed42"
+            run_id = f"{m}-{ds}-20260605-01-seed42"
             d = _load(run_id)
             me = d["metrics"]
             ds_col = label if first else ""

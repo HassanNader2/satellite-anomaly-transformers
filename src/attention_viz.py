@@ -55,7 +55,7 @@ matplotlib.rcParams.update({
 })
 
 CKPT   = os.path.join(_EXPERIMENTS, "checkpoints",
-                      "patchtst-opssat-20260516-01-seed42-best.pt")
+                      "patchtst-opssat-20260602-01-seed42-best.pt")
 CONFIG = os.path.join(_EXPERIMENTS, "configs", "patchtst-opssat.yaml")
 
 

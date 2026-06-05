@@ -30,8 +30,6 @@ import json
 import logging
 import datetime
 import yaml
-import numpy as np
-import random
 import torch
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
@@ -103,9 +101,10 @@ def main():
     with open(config_path) as f:
         config = yaml.safe_load(f)
 
-    # Apply seed override — affects training seed only; data split is fixed by data.seed in YAML
+    # Apply seed override — affects training seed and data split seed
     if seed_override is not None:
         config["training"]["seed"] = seed_override
+        config["data"]["seed"] = seed_override
         run_id = config["run_id"] + f"-seed{seed_override}"
     else:
         run_id = config["run_id"]
@@ -133,12 +132,6 @@ def main():
     )
     counts = splits["split_counts"]
     logger.info(f"Train: {counts['train_total']} | Val: {counts['val_total']} | Test: {counts['test_total']}")
-
-    # Seed all RNGs before model initialization — ensures reproducible weight init
-    _seed = config["training"]["seed"]
-    torch.manual_seed(_seed)
-    np.random.seed(_seed)
-    random.seed(_seed)
 
     # Build wrapper
     logger.info("Building model wrapper...")

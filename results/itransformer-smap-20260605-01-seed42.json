@@ -1,0 +1,19 @@
+{
+  "run_id": "itransformer-smap-20260605-01-seed42",
+  "model": "itransformer",
+  "dataset": "smap",
+  "seed": 42,
+  "timestamp": "2026-06-05T23:09:51.900147",
+  "win_size": 100,
+  "enc_in": 25,
+  "n_channels": 54,
+  "n_timesteps": 351026,
+  "anomaly_rate": 0.15874607578925778,
+  "metrics": {
+    "aucroc": 0.4852014447219701,
+    "aucpr": 0.16864747623785037,
+    "f1_oracle": 0.27399631223110016,
+    "threshold_oracle": 0.0025583587121218443
+  },
+  "note": "AUCROC and AUCPR are primary metrics (threshold-independent). F1 uses oracle threshold (best-F1 sweep on full test set \u2014 stated in paper). No point-adjustment applied. AT composite score restored for continuous data (plain MSE used only on OPS-SAT-AD)."
+}

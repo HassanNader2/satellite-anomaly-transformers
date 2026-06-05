@@ -57,20 +57,20 @@ WONG = {
 # Models to analyse: (display_label, scores_npz, result_json)
 MODELS = [
     ("iTransformer",
-     "itransformer-opssat-20260516-01-seed42-scores.npz",
-     "itransformer-opssat-20260516-01-seed42.json",
+     "itransformer-opssat-20260602-01-seed42-scores.npz",
+     "itransformer-opssat-20260602-01-seed42.json",
      "itransformer"),
     ("PatchTST",
-     "patchtst-opssat-20260516-01-seed42-scores.npz",
-     "patchtst-opssat-20260516-01-seed42.json",
+     "patchtst-opssat-20260602-01-seed42-scores.npz",
+     "patchtst-opssat-20260602-01-seed42.json",
      "patchtst"),
     ("Anomaly Transformer",
-     "anomaly-transformer-opssat-20260516-d64-01-seed42-scores.npz",
-     "anomaly-transformer-opssat-20260516-d64-01-seed42.json",
+     "anomaly-transformer-opssat-20260602-d64-01-seed42-scores.npz",
+     "anomaly-transformer-opssat-20260602-d64-01-seed42.json",
      "at"),
     ("LSTM-AE",
-     "lstm-ae-opssat-20260530-01-seed42-scores.npz",
-     "lstm-ae-opssat-20260530-01-seed42.json",
+     "lstm-ae-opssat-20260602-01-seed42-scores.npz",
+     "lstm-ae-opssat-20260602-01-seed42.json",
      "lstm-ae"),
 ]
 
