@@ -136,6 +136,7 @@ class AnomalyTransformerWrapper(nn.Module):
         Returns per-segment anomaly score as a 1-D tensor of shape (B,).
         Score = masked mean over timesteps of: softmax(-(series_kl + prior_kl)) * mse * temperature
         """
+        self.eval()  # Use running stats for BatchNorm, disable dropout
         if x.dim() == 2:
             x = x.unsqueeze(-1)
 
@@ -157,5 +158,10 @@ class AnomalyTransformerWrapper(nn.Module):
             scores = (rec_loss * m).sum(dim=1) / m.sum(dim=1).clamp(min=1)
         else:
             scores = rec_loss.mean(dim=1)
+
+        # Clip outliers for numerical stability
+        if scores.numel() > 1:
+            p999 = torch.quantile(scores, 0.999).item()
+            scores = scores.clamp(max=min(p999, 1e6))
 
         return scores  # (B,)

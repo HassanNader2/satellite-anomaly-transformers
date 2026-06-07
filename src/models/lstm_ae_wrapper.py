@@ -90,6 +90,7 @@ class LSTMAEWrapper(nn.Module):
         """
         Returns per-segment anomaly score as a 1-D tensor of shape (B,).
         Score = masked mean MSE per segment (same as PatchTST and iTransformer).
+        Clipped to guard against numerical explosions.
         """
         self.eval()
         if x.dim() == 2:
@@ -101,4 +102,8 @@ class LSTMAEWrapper(nn.Module):
             scores = (loss * m).sum(dim=1) / m.sum(dim=1).clamp(min=1)
         else:
             scores = loss.mean(dim=1)
+        # Clip outliers for numerical stability
+        if scores.numel() > 1:
+            p999 = torch.quantile(scores, 0.999).item()
+            scores = scores.clamp(max=min(p999, 1e6))
         return scores  # (B,)

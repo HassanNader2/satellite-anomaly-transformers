@@ -99,6 +99,7 @@ class iTransformerWrapper(nn.Module):
         min(99.9th percentile, 1e6) to guard against numerical explosions
         on datasets with many near-zero-variance channels (e.g. SMAP).
         """
+        self.eval()  # Use running stats for BatchNorm, disable dropout
         if x.dim() == 2:
             x = x.unsqueeze(-1)
         reconstruction = self.model(x, None, None, None)

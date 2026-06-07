@@ -57,6 +57,7 @@ def train(wrapper, train_dataset, val_dataset, config, run_id, logger=None, chec
 
     model_type = config.get("model", "unknown")
     is_at = model_type == "anomaly-transformer"
+    is_lstm = model_type == "lstm-ae"
 
     if checkpoints_dir is None:
         checkpoints_dir = os.path.join(os.path.dirname(__file__), "..", "checkpoints")
@@ -97,6 +98,9 @@ def train(wrapper, train_dataset, val_dataset, config, run_id, logger=None, chec
             else:
                 loss = wrapper.compute_train_loss(segs, masks)
                 loss.backward()
+                # Apply gradient clipping to RNN-based models (LSTM-AE) to prevent explosion
+                if is_lstm:
+                    torch.nn.utils.clip_grad_norm_(wrapper.parameters(), max_norm=1.0)
                 optimizer.step()
                 train_loss_sum += loss.item()
                 del loss
