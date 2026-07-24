@@ -118,7 +118,8 @@ def main():
     logger.info(f"Run: {run_id}")
     logger.info(f"Model: {model_name}")
     logger.info(f"Config: {config_path}")
-    logger.info(f"PyTorch: {torch.__version__} | Device: cpu")
+    _device_str = "cuda" if torch.cuda.is_available() else "cpu"
+    logger.info(f"PyTorch: {torch.__version__} | Device: {_device_str}")
 
     # Load data
     data_cfg = config["data"]
@@ -148,7 +149,7 @@ def main():
 
     # Train
     logger.info("Starting training...")
-    best_ckpt = train(
+    best_ckpt, best_epoch, stop_reason = train(
         wrapper=wrapper,
         train_dataset=splits["train"],
         val_dataset=splits["val"],
@@ -181,6 +182,8 @@ def main():
         "status": "COMPLETE",
         "split_counts": counts,
         "metrics": metrics,
+        "best_epoch": best_epoch,
+        "stop_reason": stop_reason,
         "config": config,
         "checkpoint": best_ckpt,
         "n_params": n_params,

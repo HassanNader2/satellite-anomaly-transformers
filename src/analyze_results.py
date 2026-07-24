@@ -1,13 +1,16 @@
 """
-Stage 9 — Results analysis and figure generation.
+Stage 9 / 20260625 — Results analysis and figure generation.
 
-Loads all result JSONs, prints formatted tables for the paper,
-and generates figures for secondary validation.
+Loads the from-scratch 20260625 summaries, prints tables, and generates figures:
+  - secondary_validation  (3 transformers x {SMAP,MSL}, 3-seed mean +/- std)
+  - cross_dataset_aucroc  (3 transformers x {OPS-SAT,SMAP,MSL}, 3-seed mean +/- std)
+  - capacity_ablation     (4 models x {64,128,256,512}, AUCROC mean +/- std)
 
-Usage:
-  source venv/bin/activate
-  cd papers/satellite-anomaly/experiments/src
-  python analyze_results.py
+Headline capacity is d=512. per_channel_f1 is produced by analyze_per_channel.py;
+metrics_comparison / roc_pr_curves / score_distributions by plot_results.py.
+
+Usage (from project root, venv active):
+  python papers/satellite-anomaly/experiments/src/analyze_results.py
 """
 
 import os
@@ -22,280 +25,252 @@ _HERE        = os.path.dirname(os.path.abspath(__file__))
 _EXPERIMENTS = os.path.abspath(os.path.join(_HERE, ".."))
 _RESULTS     = os.path.join(_EXPERIMENTS, "results")
 _FIGURES     = os.path.abspath(os.path.join(_EXPERIMENTS, "..", "figures"))
-
 os.makedirs(_FIGURES, exist_ok=True)
 
-# Wong colorblind-safe palette
 COLORS = {
     "patchtst":            "#0072B2",   # blue
     "itransformer":        "#009E73",   # bluish green
     "anomaly-transformer": "#D55E00",   # vermillion
+    "lstm-ae":             "#CC79A7",   # reddish purple
 }
 MODEL_LABELS = {
     "patchtst":            "PatchTST",
     "itransformer":        "iTransformer",
     "anomaly-transformer": "Anomaly Transformer",
+    "lstm-ae":             "LSTM-AE",
 }
 
-# ---------------------------------------------------------------------------
-# Load helpers
-# ---------------------------------------------------------------------------
+# Headline d=512 summaries (3-seed).
+OPSSAT_D512 = {m: f"{m}-opssat-20260625-d512-summary" for m in MODEL_LABELS}
+# Full capacity sweep.
+CAPS = [64, 128, 256, 512]
+ABLATION_MODELS = ["itransformer", "patchtst", "lstm-ae", "anomaly-transformer"]
+SECONDARY_MODELS = ["patchtst", "itransformer", "anomaly-transformer"]
+
 
 def _load(run_id):
-    path = os.path.join(_RESULTS, f"{run_id}.json")
+    with open(os.path.join(_RESULTS, f"{run_id}.json")) as f:
+        return json.load(f)
+
+
+def _load_summary(base):
+    path = os.path.join(_RESULTS, f"{base}-summary.json")
+    if not os.path.exists(path):
+        return None
     with open(path) as f:
         return json.load(f)
 
 
 # ---------------------------------------------------------------------------
-# OPS-SAT-AD summary table
+# Tables
 # ---------------------------------------------------------------------------
 
 def print_opssat_table():
-    models = ["anomaly-transformer", "patchtst", "itransformer"]
-    summary_ids = {
-        "anomaly-transformer": "anomaly-transformer-opssat-20260602-d64-01-summary",
-        "patchtst":            "patchtst-opssat-20260602-01-summary",
-        "itransformer":        "itransformer-opssat-20260602-01-summary",
-    }
-
-    print("\n" + "="*70)
-    print("OPS-SAT-AD RESULTS (mean ± std, 3 seeds: 42/0/1)")
-    print("="*70)
-    header = f"{'Model':<22} {'Acc':>10} {'Prec':>10} {'Rec':>10} {'F1':>10} {'MCC':>10} {'AUCROC':>10} {'AUCPR':>10}"
-    print(header)
-    print("-"*70)
-
-    for m in models:
-        d = _load(summary_ids[m])
+    print("\n" + "=" * 78)
+    print("OPS-SAT-AD RESULTS @ d=512 (mean +/- std, 3 seeds: 42/0/1)")
+    print("=" * 78)
+    print(f"{'Model':<22} {'Acc':>11} {'F1':>11} {'MCC':>11} {'AUCROC':>11} {'AUCPR':>11}")
+    print("-" * 78)
+    for m in ABLATION_MODELS:
+        d = _load_summary(OPSSAT_D512[m].replace("-summary", ""))
+        if d is None:
+            continue
         s = d["metrics_summary"]
-        acc   = f"{s['accuracy']['mean']:.3f}±{s['accuracy']['std']:.3f}"
-        prec  = f"{s['precision']['mean']:.3f}±{s['precision']['std']:.3f}"
-        rec   = f"{s['recall']['mean']:.3f}±{s['recall']['std']:.3f}"
-        f1    = f"{s['f1']['mean']:.3f}±{s['f1']['std']:.3f}"
-        mcc   = f"{s['mcc']['mean']:.3f}±{s['mcc']['std']:.3f}"
-        auc   = f"{s['aucroc']['mean']:.3f}±{s['aucroc']['std']:.3f}"
-        aucpr = f"{s['aucpr']['mean']:.3f}±{s['aucpr']['std']:.3f}"
-        print(f"{MODEL_LABELS[m]:<22} {acc:>10} {prec:>10} {rec:>10} {f1:>10} {mcc:>10} {auc:>10} {aucpr:>10}")
+        def f(k): return f"{s[k]['mean']:.3f}±{s[k]['std']:.3f}"
+        print(f"{MODEL_LABELS[m]:<22} {f('accuracy'):>11} {f('f1'):>11} {f('mcc'):>11} {f('aucroc'):>11} {f('aucpr'):>11}")
 
-
-# ---------------------------------------------------------------------------
-# Secondary validation table
-# ---------------------------------------------------------------------------
 
 def print_secondary_table():
-    print("\n" + "="*70)
-    print("SECONDARY VALIDATION (seed 42, no point-adjustment)")
-    print("="*70)
-
-    for dataset in ["smap", "msl"]:
-        enc_in = 25 if dataset == "smap" else 55
-        anom_rate = 0.159 if dataset == "smap" else 0.127
-        print(f"\n{dataset.upper()}  (enc_in={enc_in}, anomaly_rate={anom_rate:.3f})")
-        print(f"{'Model':<22} {'AUCROC':>10} {'AUCPR':>10} {'F1(oracle)':>12} {'Note':>20}")
-        print("-"*70)
-
-        degenerate_f1 = 2*anom_rate/(1+anom_rate)
-
-        for m in ["anomaly-transformer", "patchtst", "itransformer"]:
-            run_id = f"{m}-{dataset}-20260605-01-seed42"
-            d = _load(run_id)
-            me = d["metrics"]
-            is_degen = abs(me["f1_oracle"] - degenerate_f1) < 0.002
-            note = "degenerate" if is_degen else ""
-            print(f"{MODEL_LABELS[m]:<22} {me['aucroc']:>10.4f} {me['aucpr']:>10.4f} {me['f1_oracle']:>12.4f} {note:>20}")
+    print("\n" + "=" * 78)
+    print("SECONDARY VALIDATION @ d=512 (3-seed mean +/- std, no point-adjustment)")
+    print("=" * 78)
+    for ds in ["smap", "msl"]:
+        print(f"\n{ds.upper()}")
+        print(f"{'Model':<22} {'AUCROC':>16} {'AUCPR':>16} {'F1(oracle)':>16}")
+        print("-" * 72)
+        for m in SECONDARY_MODELS:
+            d = _load_summary(f"{m}-{ds}-20260625")
+            if d is None:
+                continue
+            s = d["metrics_summary"]
+            def f(k): return f"{s[k]['mean']:.3f}±{s[k]['std']:.3f}"
+            print(f"{MODEL_LABELS[m]:<22} {f('aucroc'):>16} {f('aucpr'):>16} {f('f1_oracle'):>16}")
 
 
 # ---------------------------------------------------------------------------
-# Secondary validation figure — AUCROC grouped bar chart
+# Secondary AUCROC figure
 # ---------------------------------------------------------------------------
 
 def plot_secondary_aucroc():
-    models = ["patchtst", "itransformer", "anomaly-transformer"]
     datasets = ["smap", "msl"]
     dataset_labels = {"smap": "SMAP", "msl": "MSL"}
 
-    aucroc = {}
-    for m in models:
-        aucroc[m] = {}
+    vals, errs = {}, {}
+    for m in SECONDARY_MODELS:
+        vals[m], errs[m] = {}, {}
         for ds in datasets:
-            run_id = f"{m}-{ds}-20260605-01-seed42"
-            d = _load(run_id)
-            aucroc[m][ds] = d["metrics"]["aucroc"]
+            d = _load_summary(f"{m}-{ds}-20260625")
+            vals[m][ds] = d["metrics_summary"]["aucroc"]["mean"]
+            errs[m][ds] = d["metrics_summary"]["aucroc"]["std"]
 
-    fig, axes = plt.subplots(1, 2, figsize=(9, 4), sharey=False)
-
-    x = np.arange(len(models))
-    width = 0.55
-
+    fig, axes = plt.subplots(1, 2, figsize=(9, 4))
+    x = np.arange(len(SECONDARY_MODELS))
     for ax, ds in zip(axes, datasets):
-        bars = [aucroc[m][ds] for m in models]
-        colors = [COLORS[m] for m in models]
-        rects = ax.bar(x, bars, width, color=colors, edgecolor="white", linewidth=0.8, zorder=3)
-
-        # Random baseline
-        ax.axhline(0.5, color="black", linewidth=1.2, linestyle="--", label="Random (0.5)", zorder=2)
-
+        bars = [vals[m][ds] for m in SECONDARY_MODELS]
+        e    = [errs[m][ds] for m in SECONDARY_MODELS]
+        colors = [COLORS[m] for m in SECONDARY_MODELS]
+        rects = ax.bar(x, bars, 0.55, color=colors, edgecolor="white", linewidth=0.8,
+                       yerr=e, capsize=3, error_kw={"elinewidth": 1.0, "ecolor": "black"}, zorder=3)
+        ax.axhline(0.5, color="black", linewidth=1.2, linestyle="--", zorder=2)
         ax.set_xticks(x)
-        ax.set_xticklabels([MODEL_LABELS[m] for m in models], fontsize=9)
-        ax.set_ylabel("AUCROC", fontsize=10)
-        ax.set_title(dataset_labels[ds], fontsize=11, fontweight="bold")
+        ax.set_xticklabels([MODEL_LABELS[m] for m in SECONDARY_MODELS], fontsize=8)
+        ax.set_ylabel("AUCROC")
+        ax.set_title(dataset_labels[ds], fontweight="bold")
         ax.set_ylim(0.0, 0.75)
         ax.yaxis.grid(True, linestyle=":", alpha=0.6, zorder=0)
         ax.set_axisbelow(True)
-
         for rect, val in zip(rects, bars):
-            ax.text(rect.get_x() + rect.get_width()/2, rect.get_height() + 0.012,
+            ax.text(rect.get_x() + rect.get_width() / 2, rect.get_height() + 0.012,
                     f"{val:.3f}", ha="center", va="bottom", fontsize=8.5)
 
-    # Shared legend
-    legend_handles = [
-        mpatches.Patch(color=COLORS[m], label=MODEL_LABELS[m]) for m in models
-    ] + [plt.Line2D([0], [0], color="black", linewidth=1.2, linestyle="--", label="Random (0.5)")]
-    fig.legend(handles=legend_handles, loc="upper center", ncol=4,
-               fontsize=8.5, frameon=True, bbox_to_anchor=(0.5, 1.02))
-
-    fig.suptitle("Secondary Validation — AUCROC without Point-Adjustment",
-                 fontsize=11, y=1.10)
+    handles = [mpatches.Patch(color=COLORS[m], label=MODEL_LABELS[m]) for m in SECONDARY_MODELS]
+    handles += [plt.Line2D([0], [0], color="black", linewidth=1.2, linestyle="--", label="Random (0.5)")]
+    fig.legend(handles=handles, loc="upper center", ncol=4, fontsize=8.5, bbox_to_anchor=(0.5, 1.02))
+    fig.suptitle("Secondary Validation — AUCROC without Point-Adjustment (d=512, 3-seed)", y=1.10)
     fig.tight_layout()
-
     for ext in ("pdf", "png"):
-        path = os.path.join(_FIGURES, f"secondary_validation.{ext}")
-        fig.savefig(path, dpi=300, bbox_inches="tight")
-        print(f"Saved: {path}")
+        fig.savefig(os.path.join(_FIGURES, f"secondary_validation.{ext}"), dpi=300, bbox_inches="tight")
+        print(f"Saved: secondary_validation.{ext}")
     plt.close(fig)
 
 
 # ---------------------------------------------------------------------------
-# Cross-dataset AUCROC comparison figure
+# Cross-dataset AUCROC figure
 # ---------------------------------------------------------------------------
 
 def plot_cross_dataset_aucroc():
-    """
-    Grouped bar chart: 3 models × 3 datasets (OPS-SAT-AD, SMAP, MSL).
-    OPS-SAT-AD uses mean across 3 seeds; SMAP/MSL use seed 42.
-    """
-    models   = ["patchtst", "itransformer", "anomaly-transformer"]
     datasets = ["opssat", "smap", "msl"]
     dataset_labels = {"opssat": "OPS-SAT-AD", "smap": "SMAP", "msl": "MSL"}
 
-    summary_ids = {
-        "patchtst":            "patchtst-opssat-20260602-01-summary",
-        "itransformer":        "itransformer-opssat-20260602-01-summary",
-        "anomaly-transformer": "anomaly-transformer-opssat-20260602-d64-01-summary",
-    }
-
-    aucroc = {m: {} for m in models}
-    aucroc_err = {m: {} for m in models}
-
-    for m in models:
-        # OPS-SAT-AD — mean ± std from summary
-        d = _load(summary_ids[m])
-        aucroc[m]["opssat"]     = d["metrics_summary"]["aucroc"]["mean"]
-        aucroc_err[m]["opssat"] = d["metrics_summary"]["aucroc"]["std"]
-        # SMAP / MSL — point estimate, no std
+    aucroc = {m: {} for m in SECONDARY_MODELS}
+    err    = {m: {} for m in SECONDARY_MODELS}
+    for m in SECONDARY_MODELS:
+        d = _load_summary(OPSSAT_D512[m].replace("-summary", ""))
+        aucroc[m]["opssat"] = d["metrics_summary"]["aucroc"]["mean"]
+        err[m]["opssat"]    = d["metrics_summary"]["aucroc"]["std"]
         for ds in ("smap", "msl"):
-            run_id = f"{m}-{ds}-20260605-01-seed42"
-            d2 = _load(run_id)
-            aucroc[m][ds]     = d2["metrics"]["aucroc"]
-            aucroc_err[m][ds] = 0.0
+            d2 = _load_summary(f"{m}-{ds}-20260625")
+            aucroc[m][ds] = d2["metrics_summary"]["aucroc"]["mean"]
+            err[m][ds]    = d2["metrics_summary"]["aucroc"]["std"]
 
-    n_datasets = len(datasets)
-    n_models   = len(models)
-    width      = 0.22
-    x          = np.arange(n_datasets)
+    n_models = len(SECONDARY_MODELS)
+    width = 0.22
+    x = np.arange(len(datasets))
+    offsets = np.linspace(-(n_models - 1) / 2 * width, (n_models - 1) / 2 * width, n_models)
 
     fig, ax = plt.subplots(figsize=(9, 5))
-
-    offsets = np.linspace(-(n_models-1)/2*width, (n_models-1)/2*width, n_models)
-
-    for i, m in enumerate(models):
-        vals  = [aucroc[m][ds] for ds in datasets]
-        errs  = [aucroc_err[m][ds] for ds in datasets]
-        pos   = x + offsets[i]
-        ax.bar(pos, vals, width,
-               color=COLORS[m], label=MODEL_LABELS[m],
+    for i, m in enumerate(SECONDARY_MODELS):
+        vals = [aucroc[m][ds] for ds in datasets]
+        errs = [err[m][ds] for ds in datasets]
+        ax.bar(x + offsets[i], vals, width, color=COLORS[m], label=MODEL_LABELS[m],
                edgecolor="white", linewidth=0.8, zorder=3,
                yerr=errs, capsize=3, error_kw={"elinewidth": 1.0, "ecolor": "black"})
-
-    ax.axhline(0.5, color="black", linewidth=1.2, linestyle="--",
-               label="Random (0.5)", zorder=2)
-
+    ax.axhline(0.5, color="black", linewidth=1.2, linestyle="--", label="Random (0.5)", zorder=2)
     ax.set_xticks(x)
-    ax.set_xticklabels([dataset_labels[ds] for ds in datasets], fontsize=11)
-    ax.set_ylabel("AUCROC", fontsize=11)
+    ax.set_xticklabels([dataset_labels[ds] for ds in datasets])
+    ax.set_ylabel("AUCROC")
     ax.set_ylim(0.0, 1.0)
     ax.yaxis.grid(True, linestyle=":", alpha=0.6, zorder=0)
     ax.set_axisbelow(True)
-    ax.set_title("AUCROC Across Datasets (no point-adjustment)", fontsize=12)
-
-    ax.legend(fontsize=9, frameon=True, loc="upper right")
+    ax.set_title("AUCROC Across Datasets (d=512, 3-seed, no point-adjustment)")
+    ax.legend(fontsize=9, loc="upper right")
     fig.tight_layout()
-
     for ext in ("pdf", "png"):
-        path = os.path.join(_FIGURES, f"cross_dataset_aucroc.{ext}")
-        fig.savefig(path, dpi=300, bbox_inches="tight")
-        print(f"Saved: {path}")
+        fig.savefig(os.path.join(_FIGURES, f"cross_dataset_aucroc.{ext}"), dpi=300, bbox_inches="tight")
+        print(f"Saved: cross_dataset_aucroc.{ext}")
     plt.close(fig)
 
 
 # ---------------------------------------------------------------------------
-# LaTeX table helpers
+# Capacity ablation figure (NEW)
+# ---------------------------------------------------------------------------
+
+def plot_capacity_ablation():
+    fig, ax = plt.subplots(figsize=(7.5, 4.6))
+    for m in ABLATION_MODELS:
+        means, stds, xs = [], [], []
+        for c in CAPS:
+            d = _load_summary(f"{m}-opssat-20260625-d{c}")
+            if d is None:
+                continue
+            means.append(d["metrics_summary"]["aucroc"]["mean"])
+            stds.append(d["metrics_summary"]["aucroc"]["std"])
+            xs.append(c)
+        if not xs:
+            continue
+        ax.errorbar(xs, means, yerr=stds, marker="o", capsize=3, linewidth=1.8,
+                    color=COLORS[m], label=MODEL_LABELS[m])
+
+    ax.set_xscale("log", base=2)
+    ax.set_xticks(CAPS)
+    ax.set_xticklabels([str(c) for c in CAPS])
+    ax.set_xlabel("Capacity (d_model; hidden_size for LSTM-AE)")
+    ax.set_ylabel("AUCROC")
+    ax.set_title("OPS-SAT-AD — Capacity Ablation (3-seed mean ± std, identical training rule)")
+    ax.grid(True, linestyle=":", alpha=0.6)
+    ax.legend(fontsize=9, loc="lower left")
+    fig.tight_layout()
+    for ext in ("pdf", "png"):
+        fig.savefig(os.path.join(_FIGURES, f"capacity_ablation.{ext}"), dpi=300, bbox_inches="tight")
+        print(f"Saved: capacity_ablation.{ext}")
+    plt.close(fig)
+
+
+# ---------------------------------------------------------------------------
+# LaTeX tables
 # ---------------------------------------------------------------------------
 
 def print_latex_opssat():
-    models = ["patchtst", "itransformer", "anomaly-transformer"]
-    summary_ids = {
-        "anomaly-transformer": "anomaly-transformer-opssat-20260602-d64-01-summary",
-        "patchtst":            "patchtst-opssat-20260602-01-summary",
-        "itransformer":        "itransformer-opssat-20260602-01-summary",
-    }
-
-    print("\n--- LaTeX OPS-SAT-AD table ---")
-    print(r"\begin{tabular}{lrrrrrrr}")
+    print("\n--- LaTeX OPS-SAT-AD table (d=512) ---")
+    print(r"\begin{tabular}{lrrrrr}")
     print(r"\toprule")
-    print(r"Model & Acc & Prec & Rec & F1 & MCC & AUCROC & AUCPR \\")
+    print(r"Model & Acc & F1 & MCC & AUCROC & AUCPR \\")
     print(r"\midrule")
-    for m in ["itransformer", "patchtst", "anomaly-transformer"]:
-        d = _load(summary_ids[m])
+    for m in ABLATION_MODELS:
+        d = _load_summary(OPSSAT_D512[m].replace("-summary", ""))
+        if d is None:
+            continue
         s = d["metrics_summary"]
-        def fmt(k):
-            return f"${s[k]['mean']:.3f}\\pm{s[k]['std']:.3f}$"
-        row = " & ".join([
-            MODEL_LABELS[m],
-            fmt("accuracy"), fmt("precision"), fmt("recall"),
-            fmt("f1"), fmt("mcc"), fmt("aucroc"), fmt("aucpr"),
-        ])
-        print(row + r" \\")
+        def fmt(k): return f"${s[k]['mean']:.3f}\\pm{s[k]['std']:.3f}$"
+        print(" & ".join([MODEL_LABELS[m], fmt("accuracy"), fmt("f1"),
+                          fmt("mcc"), fmt("aucroc"), fmt("aucpr")]) + r" \\")
     print(r"\bottomrule")
     print(r"\end{tabular}")
 
 
 def print_latex_secondary():
-    models = ["itransformer", "patchtst", "anomaly-transformer"]
-
-    print("\n--- LaTeX Secondary Validation table ---")
+    print("\n--- LaTeX Secondary Validation table (d=512, 3-seed) ---")
     print(r"\begin{tabular}{llrrr}")
     print(r"\toprule")
     print(r"Dataset & Model & AUCROC & AUCPR & F1\textsuperscript{oracle} \\")
     print(r"\midrule")
     for ds, label in [("smap", "SMAP"), ("msl", "MSL")]:
         first = True
-        for m in models:
-            run_id = f"{m}-{ds}-20260605-01-seed42"
-            d = _load(run_id)
-            me = d["metrics"]
+        for m in SECONDARY_MODELS:
+            d = _load_summary(f"{m}-{ds}-20260625")
+            if d is None:
+                continue
+            s = d["metrics_summary"]
             ds_col = label if first else ""
             first = False
-            print(f"{ds_col} & {MODEL_LABELS[m]} & {me['aucroc']:.4f} & {me['aucpr']:.4f} & {me['f1_oracle']:.4f} \\\\")
+            print(f"{ds_col} & {MODEL_LABELS[m]} & "
+                  f"${s['aucroc']['mean']:.3f}\\pm{s['aucroc']['std']:.3f}$ & "
+                  f"${s['aucpr']['mean']:.3f}\\pm{s['aucpr']['std']:.3f}$ & "
+                  f"${s['f1_oracle']['mean']:.3f}\\pm{s['f1_oracle']['std']:.3f}$ \\\\")
         print(r"\midrule")
     print(r"\bottomrule")
     print(r"\end{tabular}")
 
-
-# ---------------------------------------------------------------------------
-# Main
-# ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
     print_opssat_table()
@@ -304,4 +279,5 @@ if __name__ == "__main__":
     print_latex_secondary()
     plot_secondary_aucroc()
     plot_cross_dataset_aucroc()
-    print("\nStage 9 complete.")
+    plot_capacity_ablation()
+    print("\nStage 9 (20260625) complete.")

@@ -1,0 +1,22 @@
+{
+  "checkpoint": "anomaly-transformer-opssat-20260625-d512-seed42-best.pt",
+  "config": "anomaly-transformer-opssat-20260625-d512.yaml",
+  "note": "AT scoring-variant comparison on OPS-SAT-AD, d=512 seed42, no retraining. Threshold = best-F1 on val (200 sweep) applied to test; MCC from that threshold; AUCROC from raw test scores. No point-adjustment.",
+  "variants": {
+    "composite": {
+      "aucroc": 0.7084,
+      "mcc": 0.2717,
+      "threshold": 0.0008836263413236087
+    },
+    "assdis": {
+      "aucroc": 0.7471,
+      "mcc": 0.3011,
+      "threshold": 26.481329165511394
+    },
+    "mse": {
+      "aucroc": 0.7497,
+      "mcc": 0.293,
+      "threshold": 0.0015115175381871454
+    }
+  }
+}

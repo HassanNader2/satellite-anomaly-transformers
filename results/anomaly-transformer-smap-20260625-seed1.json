@@ -1,0 +1,19 @@
+{
+  "run_id": "anomaly-transformer-smap-20260625-seed1",
+  "model": "anomaly-transformer",
+  "dataset": "smap",
+  "seed": 1,
+  "timestamp": "2026-06-27T15:49:13.265462",
+  "win_size": 100,
+  "enc_in": 25,
+  "n_channels": 54,
+  "n_timesteps": 351026,
+  "anomaly_rate": 0.15874607578925778,
+  "metrics": {
+    "aucroc": 0.5383991390318221,
+    "aucpr": 0.182092915730118,
+    "f1_oracle": 0.27399631223110016,
+    "threshold_oracle": 9.704735930426978e-06
+  },
+  "note": "AUCROC and AUCPR are primary metrics (threshold-independent). F1 uses oracle threshold (best-F1 sweep on full test set \u2014 stated in paper). No point-adjustment applied. AT composite score restored for continuous data (plain MSE used only on OPS-SAT-AD)."
+}

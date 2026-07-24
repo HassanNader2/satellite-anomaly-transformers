@@ -66,7 +66,8 @@ def evaluate(wrapper, checkpoint_path, val_dataset, test_dataset, config,
     if logger is None:
         logger = logging.getLogger("evaluate")
 
-    device = torch.device("cpu")
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    logger.info(f"Evaluation device: {device}")
     ckpt = torch.load(checkpoint_path, map_location=device)
     wrapper.load_state_dict(ckpt["model_state"])
     wrapper = wrapper.to(device)

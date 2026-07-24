@@ -24,20 +24,20 @@ MODELS = [
     {
         "key":         "at",
         "label":       "Anomaly Transformer",
-        "scores_path": os.path.join(_RESULTS, "anomaly-transformer-opssat-20260516-d64-01-seed42-scores.npz"),
-        "json_path":   os.path.join(_RESULTS, "anomaly-transformer-opssat-20260516-d64-01-seed42.json"),
+        "scores_path": os.path.join(_RESULTS, "anomaly-transformer-opssat-20260625-d512-seed42-scores.npz"),
+        "json_path":   os.path.join(_RESULTS, "anomaly-transformer-opssat-20260625-d512-seed42.json"),
     },
     {
         "key":         "patchtst",
         "label":       "PatchTST",
-        "scores_path": os.path.join(_RESULTS, "patchtst-opssat-20260516-01-seed42-scores.npz"),
-        "json_path":   os.path.join(_RESULTS, "patchtst-opssat-20260516-01-seed42.json"),
+        "scores_path": os.path.join(_RESULTS, "patchtst-opssat-20260625-d512-seed42-scores.npz"),
+        "json_path":   os.path.join(_RESULTS, "patchtst-opssat-20260625-d512-seed42.json"),
     },
     {
         "key":         "itransformer",
         "label":       "iTransformer",
-        "scores_path": os.path.join(_RESULTS, "itransformer-opssat-20260516-01-seed42-scores.npz"),
-        "json_path":   os.path.join(_RESULTS, "itransformer-opssat-20260516-01-seed42.json"),
+        "scores_path": os.path.join(_RESULTS, "itransformer-opssat-20260625-d512-seed42-scores.npz"),
+        "json_path":   os.path.join(_RESULTS, "itransformer-opssat-20260625-d512-seed42.json"),
     },
 ]
 

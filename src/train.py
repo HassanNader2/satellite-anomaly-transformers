@@ -44,16 +44,28 @@ def train(wrapper, train_dataset, val_dataset, config, run_id, logger=None, chec
     np.random.seed(seed)
     random.seed(seed)
 
-    device = torch.device("cpu")
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    logger.info(f"Training device: {device}")
     wrapper = wrapper.to(device)
 
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, drop_last=False)
     val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, drop_last=False)
 
-    optimizer = torch.optim.Adam(wrapper.parameters(), lr=lr)
-    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-        optimizer, T_max=epochs, eta_min=1e-6
+    weight_decay = t.get("weight_decay", 0.0)
+    optimizer = torch.optim.AdamW(wrapper.parameters(), lr=lr, weight_decay=weight_decay)
+    # ReduceLROnPlateau on validation loss — identical rule across all runs.
+    # Pairs with early stopping: halve LR after 5 stagnant epochs, floor at 1e-6.
+    # threshold/threshold_mode are PyTorch defaults, set explicitly for reproducibility:
+    # a relative improvement of >0.01% of best is required to count as progress.
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+        optimizer, mode="min", factor=0.5, patience=5,
+        threshold=1e-4, threshold_mode="rel", min_lr=1e-6,
     )
+
+    # Early-stopping improvement criterion (identical rule across all runs):
+    # an epoch resets patience only if val loss drops by more than this relative
+    # fraction of the running best (min_delta = 1e-4 relative = 0.01%).
+    es_rel_min_delta = 1e-4
 
     model_type = config.get("model", "unknown")
     is_at = model_type == "anomaly-transformer"
@@ -65,7 +77,9 @@ def train(wrapper, train_dataset, val_dataset, config, run_id, logger=None, chec
     best_ckpt_path = os.path.join(checkpoints_dir, f"{run_id}-best.pt")
 
     best_val_loss = float("inf")
+    best_epoch = 0
     patience_count = 0
+    stop_reason = "max_epochs"
 
     for epoch in range(1, epochs + 1):
         wrapper.train()
@@ -98,9 +112,7 @@ def train(wrapper, train_dataset, val_dataset, config, run_id, logger=None, chec
             else:
                 loss = wrapper.compute_train_loss(segs, masks)
                 loss.backward()
-                # Apply gradient clipping to RNN-based models (LSTM-AE) to prevent explosion
-                if is_lstm:
-                    torch.nn.utils.clip_grad_norm_(wrapper.parameters(), max_norm=1.0)
+                torch.nn.utils.clip_grad_norm_(wrapper.parameters(), max_norm=1.0)
                 optimizer.step()
                 train_loss_sum += loss.item()
                 del loss
@@ -126,15 +138,22 @@ def train(wrapper, train_dataset, val_dataset, config, run_id, logger=None, chec
 
         avg_val_loss = val_loss_sum / max(n_val, 1)
 
-        scheduler.step()
+        scheduler.step(avg_val_loss)
 
-        logger.info(f"Epoch {epoch:03d}/{epochs} | train_loss={avg_train_loss:.6f} | val_loss={avg_val_loss:.6f}")
+        cur_lr = optimizer.param_groups[0]["lr"]
+        logger.info(f"Epoch {epoch:03d}/{epochs} | train_loss={avg_train_loss:.6f} | val_loss={avg_val_loss:.6f} | lr={cur_lr:.2e}")
         for handler in logger.handlers:
             handler.flush()
 
+        # Significant-improvement test against the OLD best (before any update below).
+        # Patience resets only on a relative drop > min_delta (0.01% of best).
+        significant = avg_val_loss < best_val_loss * (1.0 - es_rel_min_delta)
+
+        # Always keep the absolute lowest-val-loss checkpoint, even if the drop
+        # is too small to reset patience.
         if avg_val_loss < best_val_loss:
             best_val_loss = avg_val_loss
-            patience_count = 0
+            best_epoch = epoch
             torch.save({
                 "epoch": epoch,
                 "model_state": wrapper.state_dict(),
@@ -142,12 +161,16 @@ def train(wrapper, train_dataset, val_dataset, config, run_id, logger=None, chec
                 "config": config,
             }, best_ckpt_path)
             logger.info(f"  Checkpoint saved (val_loss={best_val_loss:.6f})")
+
+        if significant:
+            patience_count = 0
         else:
             patience_count += 1
-            logger.info(f"  No improvement ({patience_count}/{patience})")
+            logger.info(f"  No significant improvement ({patience_count}/{patience})")
             if patience_count >= patience:
                 logger.info(f"Early stopping at epoch {epoch}.")
+                stop_reason = "early_stop"
                 break
 
-    logger.info(f"Training complete. Best val_loss={best_val_loss:.6f} at {best_ckpt_path}")
-    return best_ckpt_path
+    logger.info(f"Training complete. Best val_loss={best_val_loss:.6f} at epoch {best_epoch} ({stop_reason}). Checkpoint: {best_ckpt_path}")
+    return best_ckpt_path, best_epoch, stop_reason

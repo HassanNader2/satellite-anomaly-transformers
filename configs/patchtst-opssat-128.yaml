@@ -1,0 +1,36 @@
+run_id: patchtst-opssat-20260613-128-01
+model: patchtst
+dataset: opssat
+
+data:
+  T: 512
+  min_len: 16
+  val_frac: 0.20
+  seed: 42
+
+model_params:
+  enc_in: 1
+  seq_len: 512
+  patch_len: 16
+  stride: 8
+  d_model: 128
+  n_heads: 8
+  e_layers: 3
+  d_ff: 128
+  dropout: 0.1
+  fc_dropout: 0.1
+  head_dropout: 0.0
+  individual: false
+  padding_patch: end
+  revin: false
+  affine: false
+  subtract_last: false
+  decomposition: false
+  kernel_size: 25
+
+training:
+  epochs: 50
+  batch_size: 16
+  lr: 0.0001
+  patience: 15
+  seed: 42

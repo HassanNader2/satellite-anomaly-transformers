@@ -1,0 +1,121 @@
+{
+  "config_base": "lstm-ae-opssat-20260625-d512",
+  "n_seeds": 3,
+  "seeds": [
+    0,
+    1,
+    42
+  ],
+  "metrics_summary": {
+    "accuracy": {
+      "mean": 0.9103,
+      "std": 0.0118,
+      "values": [
+        0.9155,
+        0.9214,
+        0.8939
+      ]
+    },
+    "precision": {
+      "mean": 0.7837,
+      "std": 0.0384,
+      "values": [
+        0.7899,
+        0.8273,
+        0.7339
+      ]
+    },
+    "recall": {
+      "mean": 0.8214,
+      "std": 0.0126,
+      "values": [
+        0.8393,
+        0.8125,
+        0.8125
+      ]
+    },
+    "f1": {
+      "mean": 0.8016,
+      "std": 0.0217,
+      "values": [
+        0.8139,
+        0.8198,
+        0.7712
+      ]
+    },
+    "mcc": {
+      "mean": 0.7445,
+      "std": 0.029,
+      "values": [
+        0.7599,
+        0.7696,
+        0.7039
+      ]
+    },
+    "aucroc": {
+      "mean": 0.9601,
+      "std": 0.0108,
+      "values": [
+        0.9709,
+        0.9639,
+        0.9454
+      ]
+    },
+    "aucpr": {
+      "mean": 0.8905,
+      "std": 0.0235,
+      "values": [
+        0.9124,
+        0.9012,
+        0.8578
+      ]
+    }
+  },
+  "per_seed": [
+    {
+      "seed": 0,
+      "run_id": "lstm-ae-opssat-20260625-d512-seed0",
+      "metrics": {
+        "accuracy": 0.9155,
+        "precision": 0.7899,
+        "recall": 0.8393,
+        "f1": 0.8139,
+        "mcc": 0.7599,
+        "aucroc": 0.9709,
+        "aucpr": 0.9124,
+        "threshold": 0.014694,
+        "val_f1": 0.8235
+      }
+    },
+    {
+      "seed": 1,
+      "run_id": "lstm-ae-opssat-20260625-d512-seed1",
+      "metrics": {
+        "accuracy": 0.9214,
+        "precision": 0.8273,
+        "recall": 0.8125,
+        "f1": 0.8198,
+        "mcc": 0.7696,
+        "aucroc": 0.9639,
+        "aucpr": 0.9012,
+        "threshold": 0.021715,
+        "val_f1": 0.8346
+      }
+    },
+    {
+      "seed": 42,
+      "run_id": "lstm-ae-opssat-20260625-d512-seed42",
+      "metrics": {
+        "accuracy": 0.8939,
+        "precision": 0.7339,
+        "recall": 0.8125,
+        "f1": 0.7712,
+        "mcc": 0.7039,
+        "aucroc": 0.9454,
+        "aucpr": 0.8578,
+        "threshold": 0.024837,
+        "val_f1": 0.7519
+      }
+    }
+  ]
+}

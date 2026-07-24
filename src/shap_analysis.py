@@ -54,25 +54,25 @@ MODEL_CFGS = [
     {
         "key":       "at",
         "label":     "Anomaly Transformer",
-        "config":    os.path.join(_EXPERIMENTS, "configs", "anomaly-transformer-opssat.yaml"),
+        "config":    os.path.join(_EXPERIMENTS, "configs", "anomaly-transformer-opssat-20260625-d512.yaml"),
         "ckpt":      os.path.join(_EXPERIMENTS, "checkpoints",
-                                  "anomaly-transformer-opssat-20260602-d64-01-seed42-best.pt"),
+                                  "anomaly-transformer-opssat-20260625-d512-seed42-best.pt"),
         "wrapper":   "anomaly_transformer",
     },
     {
         "key":       "patchtst",
         "label":     "PatchTST",
-        "config":    os.path.join(_EXPERIMENTS, "configs", "patchtst-opssat.yaml"),
+        "config":    os.path.join(_EXPERIMENTS, "configs", "patchtst-opssat-20260625-d512.yaml"),
         "ckpt":      os.path.join(_EXPERIMENTS, "checkpoints",
-                                  "patchtst-opssat-20260602-01-seed42-best.pt"),
+                                  "patchtst-opssat-20260625-d512-seed42-best.pt"),
         "wrapper":   "patchtst",
     },
     {
         "key":       "itransformer",
         "label":     "iTransformer",
-        "config":    os.path.join(_EXPERIMENTS, "configs", "itransformer-opssat.yaml"),
+        "config":    os.path.join(_EXPERIMENTS, "configs", "itransformer-opssat-20260625-d512.yaml"),
         "ckpt":      os.path.join(_EXPERIMENTS, "checkpoints",
-                                  "itransformer-opssat-20260602-01-seed42-best.pt"),
+                                  "itransformer-opssat-20260625-d512-seed42-best.pt"),
         "wrapper":   "itransformer",
     },
 ]
@@ -423,7 +423,7 @@ def main():
         print(f"  {label}: conc={mean_conc:.1%} +/- {std_conc:.1%}  ratio={ratio:.2f}x"
               f"  per-seg-max mean={mean_max:.4f} +/- {std_max:.4f}")
 
-    summary_path = os.path.join(_RESULTS, "shap_concentration_summary.json")
+    summary_path = os.path.join(_RESULTS, "shap_concentration_20260625.json")
     import json as _json
     with open(summary_path, "w") as f:
         _json.dump(summary, f, indent=2)

@@ -1,0 +1,22 @@
+run_id: lstm-ae-opssat-20260625-d64
+model: lstm-ae
+dataset: opssat
+
+data:
+  T: 512
+  min_len: 16
+  val_frac: 0.20
+  seed: 42
+
+model_params:
+  seq_len: 512
+  hidden_size: 64
+  num_layers: 3
+  dropout: 0.1
+
+training:
+  epochs: 150
+  batch_size: 16
+  lr: 0.0001
+  patience: 15
+  seed: 42

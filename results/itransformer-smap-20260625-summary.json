@@ -1,0 +1,71 @@
+{
+  "run_base": "itransformer-smap-20260625",
+  "n_seeds": 3,
+  "seeds": [
+    0,
+    1,
+    42
+  ],
+  "metrics_summary": {
+    "aucroc": {
+      "mean": 0.5032,
+      "std": 0.0013,
+      "values": [
+        0.5045552878450764,
+        0.5015496922954326,
+        0.5036418958521144
+      ]
+    },
+    "aucpr": {
+      "mean": 0.172,
+      "std": 0.0002,
+      "values": [
+        0.17217012718776667,
+        0.17170384822686563,
+        0.17226497973816868
+      ]
+    },
+    "f1_oracle": {
+      "mean": 0.274,
+      "std": 0.0,
+      "values": [
+        0.27399631223110016,
+        0.27399631223110016,
+        0.27399631223110016
+      ]
+    }
+  },
+  "per_seed": [
+    {
+      "seed": 0,
+      "run_id": "itransformer-smap-20260625-seed0",
+      "metrics": {
+        "aucroc": 0.5045552878450764,
+        "aucpr": 0.17217012718776667,
+        "f1_oracle": 0.27399631223110016,
+        "threshold_oracle": 6.116993608884513e-05
+      }
+    },
+    {
+      "seed": 1,
+      "run_id": "itransformer-smap-20260625-seed1",
+      "metrics": {
+        "aucroc": 0.5015496922954326,
+        "aucpr": 0.17170384822686563,
+        "f1_oracle": 0.27399631223110016,
+        "threshold_oracle": 1.742111453495454e-05
+      }
+    },
+    {
+      "seed": 42,
+      "run_id": "itransformer-smap-20260625-seed42",
+      "metrics": {
+        "aucroc": 0.5036418958521144,
+        "aucpr": 0.17226497973816868,
+        "f1_oracle": 0.27399631223110016,
+        "threshold_oracle": 2.3549764591734856e-05
+      }
+    }
+  ],
+  "note": "Non-point-adjusted. AUCROC/AUCPR are primary; F1 is oracle (best-F1 sweep on full test)."
+}

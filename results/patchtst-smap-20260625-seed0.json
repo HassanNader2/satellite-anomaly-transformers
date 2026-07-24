@@ -1,0 +1,19 @@
+{
+  "run_id": "patchtst-smap-20260625-seed0",
+  "model": "patchtst",
+  "dataset": "smap",
+  "seed": 0,
+  "timestamp": "2026-06-27T07:22:32.744156",
+  "win_size": 100,
+  "enc_in": 25,
+  "n_channels": 54,
+  "n_timesteps": 351026,
+  "anomaly_rate": 0.15874607578925778,
+  "metrics": {
+    "aucroc": 0.5424860962103771,
+    "aucpr": 0.17805370723394395,
+    "f1_oracle": 0.27399631223110016,
+    "threshold_oracle": 0.00023609599156770855
+  },
+  "note": "AUCROC and AUCPR are primary metrics (threshold-independent). F1 uses oracle threshold (best-F1 sweep on full test set \u2014 stated in paper). No point-adjustment applied. AT composite score restored for continuous data (plain MSE used only on OPS-SAT-AD)."
+}

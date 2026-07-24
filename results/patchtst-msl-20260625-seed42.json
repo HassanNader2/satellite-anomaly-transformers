@@ -1,0 +1,19 @@
+{
+  "run_id": "patchtst-msl-20260625-seed42",
+  "model": "patchtst",
+  "dataset": "msl",
+  "seed": 42,
+  "timestamp": "2026-06-27T08:06:10.622891",
+  "win_size": 100,
+  "enc_in": 55,
+  "n_channels": 27,
+  "n_timesteps": 60129,
+  "anomaly_rate": 0.1268938449001314,
+  "metrics": {
+    "aucroc": 0.5323899922252778,
+    "aucpr": 0.1251622365903724,
+    "f1_oracle": 0.2252099352115586,
+    "threshold_oracle": 0.00013935544120613486
+  },
+  "note": "AUCROC and AUCPR are primary metrics (threshold-independent). F1 uses oracle threshold (best-F1 sweep on full test set \u2014 stated in paper). No point-adjustment applied. AT composite score restored for continuous data (plain MSE used only on OPS-SAT-AD)."
+}

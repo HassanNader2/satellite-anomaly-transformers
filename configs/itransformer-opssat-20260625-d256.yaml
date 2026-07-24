@@ -1,0 +1,32 @@
+run_id: itransformer-opssat-20260625-d256
+model: itransformer
+dataset: opssat
+
+data:
+  T: 512
+  min_len: 16
+  val_frac: 0.20
+  seed: 42
+
+model_params:
+  seq_len: 512
+  enc_in: 1
+  d_model: 256
+  n_heads: 8
+  e_layers: 3
+  d_ff: 256
+  dropout: 0.1
+  activation: gelu
+  output_attention: false
+  use_norm: false
+  embed: timeF
+  freq: h
+  factor: 1
+  class_strategy: projection
+
+training:
+  epochs: 150
+  batch_size: 16
+  lr: 0.0001
+  patience: 15
+  seed: 42

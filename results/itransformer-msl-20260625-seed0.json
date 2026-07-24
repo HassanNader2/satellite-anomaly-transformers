@@ -1,0 +1,19 @@
+{
+  "run_id": "itransformer-msl-20260625-seed0",
+  "model": "itransformer",
+  "dataset": "msl",
+  "seed": 0,
+  "timestamp": "2026-06-27T09:10:59.617049",
+  "win_size": 100,
+  "enc_in": 55,
+  "n_channels": 27,
+  "n_timesteps": 60129,
+  "anomaly_rate": 0.1268938449001314,
+  "metrics": {
+    "aucroc": 0.5779282408849228,
+    "aucpr": 0.13967373924961188,
+    "f1_oracle": 0.2252099352115586,
+    "threshold_oracle": 0.00016386261268053204
+  },
+  "note": "AUCROC and AUCPR are primary metrics (threshold-independent). F1 uses oracle threshold (best-F1 sweep on full test set \u2014 stated in paper). No point-adjustment applied. AT composite score restored for continuous data (plain MSE used only on OPS-SAT-AD)."
+}

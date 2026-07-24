@@ -1,0 +1,59 @@
+{
+  "run_id": "lstm-ae-opssat-20260625-d256-seed1",
+  "model": "lstm-ae",
+  "dataset": "opssat",
+  "seed": 1,
+  "timestamp": "2026-06-26T21:59:07.297163",
+  "status": "COMPLETE",
+  "split_counts": {
+    "filtered_segments": 66,
+    "train_total": 1238,
+    "train_anomalous": 253,
+    "train_nominal": 985,
+    "val_total": 310,
+    "val_anomalous": 63,
+    "val_nominal": 247,
+    "test_total": 509,
+    "test_anomalous": 112,
+    "test_nominal": 397
+  },
+  "metrics": {
+    "accuracy": 0.9253,
+    "precision": 0.8491,
+    "recall": 0.8036,
+    "f1": 0.8257,
+    "mcc": 0.7787,
+    "aucroc": 0.9615,
+    "aucpr": 0.8969,
+    "threshold": 0.029942,
+    "val_f1": 0.813
+  },
+  "best_epoch": 125,
+  "stop_reason": "early_stop",
+  "config": {
+    "run_id": "lstm-ae-opssat-20260625-d256",
+    "model": "lstm-ae",
+    "dataset": "opssat",
+    "data": {
+      "T": 512,
+      "min_len": 16,
+      "val_frac": 0.2,
+      "seed": 42
+    },
+    "model_params": {
+      "seq_len": 512,
+      "hidden_size": 256,
+      "num_layers": 3,
+      "dropout": 0.1
+    },
+    "training": {
+      "epochs": 150,
+      "batch_size": 16,
+      "lr": 0.0001,
+      "patience": 15,
+      "seed": 1
+    }
+  },
+  "checkpoint": "C:\\Users\\youse\\OneDrive\\Desktop\\Research Assistant\\papers\\satellite-anomaly\\experiments\\checkpoints\\lstm-ae-opssat-20260625-d256-seed1-best.pt",
+  "n_params": 2636033
+}

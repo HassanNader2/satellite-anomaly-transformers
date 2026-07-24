@@ -1,0 +1,69 @@
+{
+  "run_id": "itransformer-opssat-20260625-d512-seed0",
+  "model": "itransformer",
+  "dataset": "opssat",
+  "seed": 0,
+  "timestamp": "2026-06-26T15:50:28.857291",
+  "status": "COMPLETE",
+  "split_counts": {
+    "filtered_segments": 66,
+    "train_total": 1238,
+    "train_anomalous": 253,
+    "train_nominal": 985,
+    "val_total": 310,
+    "val_anomalous": 63,
+    "val_nominal": 247,
+    "test_total": 509,
+    "test_anomalous": 112,
+    "test_nominal": 397
+  },
+  "metrics": {
+    "accuracy": 0.9293,
+    "precision": 0.8519,
+    "recall": 0.8214,
+    "f1": 0.8364,
+    "mcc": 0.7915,
+    "aucroc": 0.9617,
+    "aucpr": 0.8933,
+    "threshold": 0.011578,
+    "val_f1": 0.7769
+  },
+  "best_epoch": 143,
+  "stop_reason": "max_epochs",
+  "config": {
+    "run_id": "itransformer-opssat-20260625-d512",
+    "model": "itransformer",
+    "dataset": "opssat",
+    "data": {
+      "T": 512,
+      "min_len": 16,
+      "val_frac": 0.2,
+      "seed": 42
+    },
+    "model_params": {
+      "seq_len": 512,
+      "enc_in": 1,
+      "d_model": 512,
+      "n_heads": 8,
+      "e_layers": 3,
+      "d_ff": 512,
+      "dropout": 0.1,
+      "activation": "gelu",
+      "output_attention": false,
+      "use_norm": false,
+      "embed": "timeF",
+      "freq": "h",
+      "factor": 1,
+      "class_strategy": "projection"
+    },
+    "training": {
+      "epochs": 150,
+      "batch_size": 16,
+      "lr": 0.0001,
+      "patience": 15,
+      "seed": 0
+    }
+  },
+  "checkpoint": "C:\\Users\\youse\\OneDrive\\Desktop\\Research Assistant\\papers\\satellite-anomaly\\experiments\\checkpoints\\itransformer-opssat-20260625-d512-seed0-best.pt",
+  "n_params": 5260288
+}

@@ -1,0 +1,71 @@
+{
+  "run_base": "anomaly-transformer-smap-20260625",
+  "n_seeds": 3,
+  "seeds": [
+    0,
+    1,
+    42
+  ],
+  "metrics_summary": {
+    "aucroc": {
+      "mean": 0.5318,
+      "std": 0.0136,
+      "values": [
+        0.5128847129861931,
+        0.5383991390318221,
+        0.5441620453520809
+      ]
+    },
+    "aucpr": {
+      "mean": 0.1783,
+      "std": 0.0044,
+      "values": [
+        0.17222956743436846,
+        0.182092915730118,
+        0.18066761828628766
+      ]
+    },
+    "f1_oracle": {
+      "mean": 0.274,
+      "std": 0.0,
+      "values": [
+        0.27399631223110016,
+        0.27399631223110016,
+        0.27399631223110016
+      ]
+    }
+  },
+  "per_seed": [
+    {
+      "seed": 0,
+      "run_id": "anomaly-transformer-smap-20260625-seed0",
+      "metrics": {
+        "aucroc": 0.5128847129861931,
+        "aucpr": 0.17222956743436846,
+        "f1_oracle": 0.27399631223110016,
+        "threshold_oracle": 9.50357298279414e-06
+      }
+    },
+    {
+      "seed": 1,
+      "run_id": "anomaly-transformer-smap-20260625-seed1",
+      "metrics": {
+        "aucroc": 0.5383991390318221,
+        "aucpr": 0.182092915730118,
+        "f1_oracle": 0.27399631223110016,
+        "threshold_oracle": 9.704735930426978e-06
+      }
+    },
+    {
+      "seed": 42,
+      "run_id": "anomaly-transformer-smap-20260625-seed42",
+      "metrics": {
+        "aucroc": 0.5441620453520809,
+        "aucpr": 0.18066761828628766,
+        "f1_oracle": 0.27399631223110016,
+        "threshold_oracle": 7.328401807171758e-06
+      }
+    }
+  ],
+  "note": "Non-point-adjusted. AUCROC/AUCPR are primary; F1 is oracle (best-F1 sweep on full test)."
+}

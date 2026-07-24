@@ -1,0 +1,71 @@
+{
+  "run_base": "patchtst-smap-20260625",
+  "n_seeds": 3,
+  "seeds": [
+    0,
+    1,
+    42
+  ],
+  "metrics_summary": {
+    "aucroc": {
+      "mean": 0.5477,
+      "std": 0.0066,
+      "values": [
+        0.5424860962103771,
+        0.5570155272086805,
+        0.5435948324861072
+      ]
+    },
+    "aucpr": {
+      "mean": 0.1804,
+      "std": 0.0027,
+      "values": [
+        0.17805370723394395,
+        0.1841586967943929,
+        0.1790294579578976
+      ]
+    },
+    "f1_oracle": {
+      "mean": 0.274,
+      "std": 0.0,
+      "values": [
+        0.27399631223110016,
+        0.27399631223110016,
+        0.27399631223110016
+      ]
+    }
+  },
+  "per_seed": [
+    {
+      "seed": 0,
+      "run_id": "patchtst-smap-20260625-seed0",
+      "metrics": {
+        "aucroc": 0.5424860962103771,
+        "aucpr": 0.17805370723394395,
+        "f1_oracle": 0.27399631223110016,
+        "threshold_oracle": 0.00023609599156770855
+      }
+    },
+    {
+      "seed": 1,
+      "run_id": "patchtst-smap-20260625-seed1",
+      "metrics": {
+        "aucroc": 0.5570155272086805,
+        "aucpr": 0.1841586967943929,
+        "f1_oracle": 0.27399631223110016,
+        "threshold_oracle": 0.0002637514553498477
+      }
+    },
+    {
+      "seed": 42,
+      "run_id": "patchtst-smap-20260625-seed42",
+      "metrics": {
+        "aucroc": 0.5435948324861072,
+        "aucpr": 0.1790294579578976,
+        "f1_oracle": 0.27399631223110016,
+        "threshold_oracle": 0.00019537597836460918
+      }
+    }
+  ],
+  "note": "Non-point-adjusted. AUCROC/AUCPR are primary; F1 is oracle (best-F1 sweep on full test)."
+}

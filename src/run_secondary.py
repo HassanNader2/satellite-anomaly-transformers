@@ -63,12 +63,16 @@ DATASET_CONFIGS = {
     },
 }
 
+# Secondary validation uses the headline d=512 sweep configs (epochs=150, patience=15,
+# e_layers=3, n_heads=8, d_ff=512) so the training rule matches the OPS-SAT runs exactly.
 MODEL_BASE_CONFIGS = {
-    "anomaly-transformer": os.path.join(_EXPERIMENTS, "configs", "anomaly-transformer-opssat.yaml"),
-    "patchtst":            os.path.join(_EXPERIMENTS, "configs", "patchtst-opssat.yaml"),
-    "itransformer":        os.path.join(_EXPERIMENTS, "configs", "itransformer-opssat.yaml"),
+    "anomaly-transformer": os.path.join(_EXPERIMENTS, "configs", "anomaly-transformer-opssat-20260625-d512.yaml"),
+    "patchtst":            os.path.join(_EXPERIMENTS, "configs", "patchtst-opssat-20260625-d512.yaml"),
+    "itransformer":        os.path.join(_EXPERIMENTS, "configs", "itransformer-opssat-20260625-d512.yaml"),
 }
 
+# Sweep tag for the from-scratch 20260625 run (run_ids share this with the OPS-SAT sweep).
+DATE_TAG   = "20260625"
 WIN_SIZE   = 100
 VAL_FRAC   = 0.20
 N_THRESH   = 200
@@ -111,8 +115,7 @@ def _load_wrapper(model_key, config, dataset_key, seed):
     # iTransformer
     if model_key == "itransformer":
         config["model_params"]["pred_len"] = WIN_SIZE
-        # Larger d_model for real multivariate attention
-        config["model_params"]["d_model"]  = 128
+        # d_model left at the config value so all three models share identical capacity
 
     # AT
     if model_key == "anomaly-transformer":
@@ -141,20 +144,44 @@ def _load_wrapper(model_key, config, dataset_key, seed):
     return wrapper
 
 
-def _train_channel(wrapper, train_ds, config, model_key):
-    """Train on one channel's non-overlapping windows."""
+def _train_channel(wrapper, train_ds, val_data, config, model_key, device):
+    """Train on one channel under the IDENTICAL rule shared with train.py:
+      AdamW + ReduceLROnPlateau(factor=0.5, patience=5, threshold=1e-4 rel, min_lr=1e-6),
+      max_epochs=150 (from config), early stop on VALIDATION reconstruction loss with
+      relative min_delta=1e-4 at patience=15 (from config), grad clip max_norm=1.0,
+      keep the absolute lowest-val-loss state.
+
+    Validation windows are non-overlapping W-length slices of this channel's val_data.
+    If the channel has no full validation window, the training loss is used as the
+    early-stop signal instead (logged via the returned monitor source).
+    """
     from torch.utils.data import DataLoader
 
     training_cfg = config.get("training", {})
     lr       = training_cfg.get("lr", 1e-4)
-    epochs   = training_cfg.get("epochs", 10)
-    patience = training_cfg.get("patience", 5)
+    epochs   = training_cfg.get("epochs", 150)
+    patience = training_cfg.get("patience", 15)
+    wd       = training_cfg.get("weight_decay", 0.0)
+    es_rel_min_delta = 1e-4
 
     loader = DataLoader(train_ds, batch_size=BATCH_SIZE, shuffle=True, drop_last=False)
-    opt    = torch.optim.Adam(wrapper.parameters(), lr=lr)
+    opt    = torch.optim.AdamW(wrapper.parameters(), lr=lr, weight_decay=wd)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+        opt, mode="min", factor=0.5, patience=5,
+        threshold=1e-4, threshold_mode="rel", min_lr=1e-6,
+    )
 
-    best_loss  = float("inf")
-    no_improve = 0
+    # Build non-overlapping validation windows for the early-stop signal.
+    W = WIN_SIZE
+    n_val = len(val_data) // W
+    val_windows = None
+    if n_val >= 1:
+        vw = np.stack([val_data[j * W:(j + 1) * W] for j in range(n_val)])
+        val_windows = torch.from_numpy(vw).float()
+
+    best_metric = float("inf")
+    best_state  = {k: v.detach().cpu().clone() for k, v in wrapper.state_dict().items()}
+    no_improve  = 0
 
     for epoch in range(1, epochs + 1):
         wrapper.train()
@@ -162,38 +189,59 @@ def _train_channel(wrapper, train_ds, config, model_key):
 
         for x in loader:
             # x: (B, W, enc_in)
+            x = x.float().to(device)
             opt.zero_grad()
 
             if model_key == "anomaly-transformer":
+                # Combined-loss surrogate, matching train.py (single optimizer step).
                 loss1, loss2 = wrapper.compute_train_loss(x)
-                loss1.backward(retain_graph=True)
-                loss2.backward()
+                combined = loss1 + loss2
+                combined.backward()
+                torch.nn.utils.clip_grad_norm_(wrapper.parameters(), max_norm=1.0)
+                opt.step()
+                total_loss += loss1.item()
             else:
                 loss = wrapper.compute_train_loss(x)
                 loss.backward()
-
-            opt.step()
-
-            if model_key == "anomaly-transformer":
-                total_loss += loss1.item()
-            else:
+                torch.nn.utils.clip_grad_norm_(wrapper.parameters(), max_norm=1.0)
+                opt.step()
                 total_loss += loss.item()
 
-        avg_loss = total_loss / max(len(loader), 1)
+        avg_train_loss = total_loss / max(len(loader), 1)
 
-        if avg_loss < best_loss - 1e-6:
-            best_loss  = avg_loss
+        # Validation reconstruction loss (MSE) — early-stop / scheduler signal.
+        if val_windows is not None:
+            wrapper.eval()
+            vloss_sum, nvb = 0.0, 0
+            with torch.no_grad():
+                for vs in range(0, len(val_windows), BATCH_SIZE):
+                    vb = val_windows[vs:vs + BATCH_SIZE].to(device)
+                    vloss_sum += wrapper.compute_val_loss(vb).item()
+                    nvb += 1
+            monitor = vloss_sum / max(nvb, 1)
+        else:
+            monitor = avg_train_loss
+
+        scheduler.step(monitor)
+
+        # Significant-improvement test against the OLD best (relative min_delta).
+        significant = monitor < best_metric * (1.0 - es_rel_min_delta)
+        if monitor < best_metric:
+            best_metric = monitor
+            best_state = {k: v.detach().cpu().clone() for k, v in wrapper.state_dict().items()}
+        if significant:
             no_improve = 0
         else:
             no_improve += 1
             if no_improve >= patience:
                 break
 
-    return best_loss
+    wrapper.load_state_dict(best_state)
+    return best_metric
 
 
 def _at_composite_score(wrapper, data: np.ndarray, win_size: int,
-                         batch_size: int = 64) -> np.ndarray:
+                         batch_size: int = 64, device=None) -> np.ndarray:
     """
     AT original composite score for continuous data: softmax(-(series_kl+prior_kl)) * MSE.
     Per timestep: mean over all timesteps in the window.
@@ -202,6 +250,8 @@ def _at_composite_score(wrapper, data: np.ndarray, win_size: int,
     """
     import torch.nn.functional as F
 
+    if device is None:
+        device = next(wrapper.parameters()).device
     wrapper.eval()
     T = len(data)
     n_windows = T - win_size + 1
@@ -211,15 +261,15 @@ def _at_composite_score(wrapper, data: np.ndarray, win_size: int,
         for start in range(0, n_windows, batch_size):
             end   = min(start + batch_size, n_windows)
             batch = np.stack([data[i : i + win_size] for i in range(start, end)])
-            x     = torch.from_numpy(batch).float()   # (B, W, enc_in)
+            x     = torch.from_numpy(batch).float().to(device)   # (B, W, enc_in)
 
             reconstruction, series, prior, _ = wrapper.model(x)
             B, T_w, enc = x.shape
 
             rec_loss = ((reconstruction - x) ** 2).mean(dim=-1)   # (B, T_w)
 
-            series_kl = torch.zeros(B, T_w)
-            prior_kl  = torch.zeros(B, T_w)
+            series_kl = torch.zeros(B, T_w, device=x.device)
+            prior_kl  = torch.zeros(B, T_w, device=x.device)
             for u in range(len(prior)):
                 prior_norm = prior[u] / prior[u].sum(dim=-1, keepdim=True).clamp(min=1e-8)
                 s_kl = (series[u] * (torch.log(series[u] + 1e-4)
@@ -231,7 +281,7 @@ def _at_composite_score(wrapper, data: np.ndarray, win_size: int,
 
             metric = F.softmax(-(series_kl + prior_kl) * wrapper.temperature, dim=-1)
             score  = (metric * rec_loss).mean(dim=1)   # (B,)
-            all_scores.append(score.numpy())
+            all_scores.append(score.cpu().numpy())
 
     scores_per_window = np.concatenate(all_scores)
     scores = np.empty(T)
@@ -287,12 +337,15 @@ def main():
     parser.add_argument("--seed",    type=int, default=42)
     args = parser.parse_args()
 
-    run_id = (f"{args.model}-{args.dataset}-{datetime.now().strftime('%Y%m%d')}-01-seed{args.seed}")
+    run_id = (f"{args.model}-{args.dataset}-{DATE_TAG}-seed{args.seed}")
     _setup_logging(run_id)
     log = logging.getLogger()
 
     log.info(f"Run: {run_id}")
     log.info(f"Model: {args.model} | Dataset: {args.dataset} | Seed: {args.seed}")
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    log.info(f"Device: {device}")
 
     # Load base config and adapt
     with open(MODEL_BASE_CONFIGS[args.model]) as f:
@@ -314,17 +367,18 @@ def main():
         log.info(f"[{i+1}/{len(channels)}] Channel: {ch['chan_id']}")
 
         wrapper = _load_wrapper(args.model, config, args.dataset, args.seed)
+        wrapper = wrapper.to(device)
 
-        # Train
-        best_loss = _train_channel(wrapper, ch["train_dataset"], config, args.model)
-        log.info(f"  Trained — best loss: {best_loss:.6f}")
+        # Train (early stop on validation reconstruction loss, identical rule)
+        best_loss = _train_channel(wrapper, ch["train_dataset"], ch["val_data"], config, args.model, device)
+        log.info(f"  Trained — best val loss: {best_loss:.6f}")
 
         # Score test
         wrapper.eval()
         if args.model == "anomaly-transformer":
-            test_scores = _at_composite_score(wrapper, ch["test_data"], WIN_SIZE)
+            test_scores = _at_composite_score(wrapper, ch["test_data"], WIN_SIZE, device=device)
         else:
-            test_scores = score_continuous(wrapper, ch["test_data"], WIN_SIZE, BATCH_SIZE)
+            test_scores = score_continuous(wrapper, ch["test_data"], WIN_SIZE, BATCH_SIZE, device=device)
 
         all_test_scores.append(test_scores)
         all_test_labels.append(ch["test_labels"])

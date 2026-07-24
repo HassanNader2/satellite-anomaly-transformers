@@ -1,0 +1,71 @@
+{
+  "run_base": "patchtst-msl-20260625",
+  "n_seeds": 3,
+  "seeds": [
+    0,
+    1,
+    42
+  ],
+  "metrics_summary": {
+    "aucroc": {
+      "mean": 0.5286,
+      "std": 0.0038,
+      "values": [
+        0.5299439367714849,
+        0.5233263133739526,
+        0.5323899922252778
+      ]
+    },
+    "aucpr": {
+      "mean": 0.1241,
+      "std": 0.0008,
+      "values": [
+        0.12412605626295814,
+        0.1231506796908296,
+        0.1251622365903724
+      ]
+    },
+    "f1_oracle": {
+      "mean": 0.2252,
+      "std": 0.0,
+      "values": [
+        0.2252099352115586,
+        0.2252099352115586,
+        0.2252099352115586
+      ]
+    }
+  },
+  "per_seed": [
+    {
+      "seed": 0,
+      "run_id": "patchtst-msl-20260625-seed0",
+      "metrics": {
+        "aucroc": 0.5299439367714849,
+        "aucpr": 0.12412605626295814,
+        "f1_oracle": 0.2252099352115586,
+        "threshold_oracle": 9.106301149586216e-05
+      }
+    },
+    {
+      "seed": 1,
+      "run_id": "patchtst-msl-20260625-seed1",
+      "metrics": {
+        "aucroc": 0.5233263133739526,
+        "aucpr": 0.1231506796908296,
+        "f1_oracle": 0.2252099352115586,
+        "threshold_oracle": 9.866256732493639e-05
+      }
+    },
+    {
+      "seed": 42,
+      "run_id": "patchtst-msl-20260625-seed42",
+      "metrics": {
+        "aucroc": 0.5323899922252778,
+        "aucpr": 0.1251622365903724,
+        "f1_oracle": 0.2252099352115586,
+        "threshold_oracle": 0.00013935544120613486
+      }
+    }
+  ],
+  "note": "Non-point-adjusted. AUCROC/AUCPR are primary; F1 is oracle (best-F1 sweep on full test)."
+}

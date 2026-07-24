@@ -1,0 +1,121 @@
+{
+  "config_base": "anomaly-transformer-opssat-20260625-d512",
+  "n_seeds": 3,
+  "seeds": [
+    0,
+    1,
+    42
+  ],
+  "metrics_summary": {
+    "accuracy": {
+      "mean": 0.5304,
+      "std": 0.1702,
+      "values": [
+        0.2927,
+        0.6817,
+        0.6169
+      ]
+    },
+    "precision": {
+      "mean": 0.296,
+      "std": 0.0485,
+      "values": [
+        0.2281,
+        0.3214,
+        0.3385
+      ]
+    },
+    "recall": {
+      "mean": 0.7024,
+      "std": 0.2214,
+      "values": [
+        0.9286,
+        0.4018,
+        0.7768
+      ]
+    },
+    "f1": {
+      "mean": 0.3983,
+      "std": 0.0519,
+      "values": [
+        0.3662,
+        0.3571,
+        0.4715
+      ]
+    },
+    "mcc": {
+      "mean": 0.1655,
+      "std": 0.0952,
+      "values": [
+        0.0569,
+        0.1507,
+        0.2888
+      ]
+    },
+    "aucroc": {
+      "mean": 0.6638,
+      "std": 0.0613,
+      "values": [
+        0.6102,
+        0.6317,
+        0.7496
+      ]
+    },
+    "aucpr": {
+      "mean": 0.4695,
+      "std": 0.0449,
+      "values": [
+        0.4228,
+        0.4557,
+        0.5301
+      ]
+    }
+  },
+  "per_seed": [
+    {
+      "seed": 0,
+      "run_id": "anomaly-transformer-opssat-20260625-d512-seed0",
+      "metrics": {
+        "accuracy": 0.2927,
+        "precision": 0.2281,
+        "recall": 0.9286,
+        "f1": 0.3662,
+        "mcc": 0.0569,
+        "aucroc": 0.6102,
+        "aucpr": 0.4228,
+        "threshold": 0.000986,
+        "val_f1": 0.3392
+      }
+    },
+    {
+      "seed": 1,
+      "run_id": "anomaly-transformer-opssat-20260625-d512-seed1",
+      "metrics": {
+        "accuracy": 0.6817,
+        "precision": 0.3214,
+        "recall": 0.4018,
+        "f1": 0.3571,
+        "mcc": 0.1507,
+        "aucroc": 0.6317,
+        "aucpr": 0.4557,
+        "threshold": 0.003704,
+        "val_f1": 0.3582
+      }
+    },
+    {
+      "seed": 42,
+      "run_id": "anomaly-transformer-opssat-20260625-d512-seed42",
+      "metrics": {
+        "accuracy": 0.6169,
+        "precision": 0.3385,
+        "recall": 0.7768,
+        "f1": 0.4715,
+        "mcc": 0.2888,
+        "aucroc": 0.7496,
+        "aucpr": 0.5301,
+        "threshold": 0.001494,
+        "val_f1": 0.4279
+      }
+    }
+  ]
+}

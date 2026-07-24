@@ -1,0 +1,121 @@
+{
+  "config_base": "anomaly-transformer-opssat-20260625-d64",
+  "n_seeds": 3,
+  "seeds": [
+    0,
+    1,
+    42
+  ],
+  "metrics_summary": {
+    "accuracy": {
+      "mean": 0.2777,
+      "std": 0.0429,
+      "values": [
+        0.336,
+        0.2338,
+        0.2633
+      ]
+    },
+    "precision": {
+      "mean": 0.2258,
+      "std": 0.0046,
+      "values": [
+        0.2322,
+        0.2231,
+        0.222
+      ]
+    },
+    "recall": {
+      "mean": 0.9375,
+      "std": 0.051,
+      "values": [
+        0.875,
+        1.0,
+        0.9375
+      ]
+    },
+    "f1": {
+      "mean": 0.3636,
+      "std": 0.0034,
+      "values": [
+        0.367,
+        0.3648,
+        0.359
+      ]
+    },
+    "mcc": {
+      "mean": 0.0482,
+      "std": 0.0221,
+      "values": [
+        0.0648,
+        0.0627,
+        0.017
+      ]
+    },
+    "aucroc": {
+      "mean": 0.5602,
+      "std": 0.0096,
+      "values": [
+        0.5708,
+        0.5475,
+        0.5624
+      ]
+    },
+    "aucpr": {
+      "mean": 0.3792,
+      "std": 0.0147,
+      "values": [
+        0.3819,
+        0.36,
+        0.3957
+      ]
+    }
+  },
+  "per_seed": [
+    {
+      "seed": 0,
+      "run_id": "anomaly-transformer-opssat-20260625-d64-seed0",
+      "metrics": {
+        "accuracy": 0.336,
+        "precision": 0.2322,
+        "recall": 0.875,
+        "f1": 0.367,
+        "mcc": 0.0648,
+        "aucroc": 0.5708,
+        "aucpr": 0.3819,
+        "threshold": 0.010262,
+        "val_f1": 0.3465
+      }
+    },
+    {
+      "seed": 1,
+      "run_id": "anomaly-transformer-opssat-20260625-d64-seed1",
+      "metrics": {
+        "accuracy": 0.2338,
+        "precision": 0.2231,
+        "recall": 1.0,
+        "f1": 0.3648,
+        "mcc": 0.0627,
+        "aucroc": 0.5475,
+        "aucpr": 0.36,
+        "threshold": 0.004956,
+        "val_f1": 0.3415
+      }
+    },
+    {
+      "seed": 42,
+      "run_id": "anomaly-transformer-opssat-20260625-d64-seed42",
+      "metrics": {
+        "accuracy": 0.2633,
+        "precision": 0.222,
+        "recall": 0.9375,
+        "f1": 0.359,
+        "mcc": 0.017,
+        "aucroc": 0.5624,
+        "aucpr": 0.3957,
+        "threshold": 0.008888,
+        "val_f1": 0.3523
+      }
+    }
+  ]
+}
